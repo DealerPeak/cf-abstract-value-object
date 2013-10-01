@@ -168,12 +168,15 @@ component {
 			/* if there's a setter, and either the value is simple and has a length OR it's not simple */
 			if (functionExists('set' & item) && (!isSimpleValue(data[item]) || len(data[item]))) {
 				
-				/* get a handle on the property */
-				var prop = properties[item];
-				
-				/* force a boolean if necessary */
-				if (prop.type == 'boolean') {
-					data[item] = data[item] ? true : false;	
+				/* there may be a setter that does not have a corresponding property */
+				if (structKeyExists(properties, item)) {
+					/* get a handle on the property */
+					var prop = properties[item];
+					
+					/* force a boolean if necessary */
+					if (prop.type == 'boolean') {
+						data[item] = data[item] ? true : false;	
+					}
 				}
 				
 				var setter = this['set' & item];
