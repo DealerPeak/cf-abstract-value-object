@@ -115,7 +115,7 @@ component {
 		for (var field in listToArray(q.columnlist)) {
 			
 			/* look for a setter function for the field */
-			if (functionExists('set' & field) && len(q[field][1])) {
+			if (functionExists('set' & field) && isSimpleValue(q[field][1]) && len(q[field][1])) {
 				var value = q[field][1];
 				
 				var fieldProps = getProperties()[field];
@@ -155,32 +155,50 @@ component {
 		/* get the properties*/
 		var properties = getProperties();
 
+		/* duplicate data so calling data structure is unaffected */
+		var _data = duplicate(data);
+
 		/* loop over the incoming structure, setting properties*/
-		for (var item in data) {
+		for (var item in _data) {
 			
 			/* might need to ignore a prefix on the item key */
 			if (len(arguments.ignorePrefix) && left(item, len(arguments.ignorePrefix)) == arguments.ignorePrefix) {
-				var value = data[item];
+				var value = _data[item];
 				item = right(item, len(item) - len(arguments.ignorePrefix));
-				data[item] = value;
+				_data[item] = value;
 			}
 			
 			/* if there's a setter, and either the value is simple and has a length OR it's not simple */
-			if (functionExists('set' & item) && (!isSimpleValue(data[item]) || len(data[item]))) {
+			if (functionExists('set' & item) && (!isSimpleValue(_data[item]) || len(_data[item]))) {
 				
 				/* there may be a setter that does not have a corresponding property */
 				if (structKeyExists(properties, item)) {
+					
 					/* get a handle on the property */
 					var prop = properties[item];
 					
 					/* force a boolean if necessary */
 					if (prop.type == 'boolean') {
-						data[item] = data[item] ? true : false;	
+						_data[item] = _data[item] ? true : false;	
+					}
+					
+					/* handle nested items */
+					if (isArray(_data[item]) && structKeyExists(prop, "item_type")) {
+						var allNestedItems = [];
+						var nestedPO = createObject("component", prop.item_type);
+						for (var nestedItem in _data[item]) {
+							arrayAppend(allNestedItems, duplicate(nestedPO.reset().loadFromStruct(nestedItem)));
+						}
+						_data[item] = allNestedItems;
+					}
+					
+					if (isStruct(_data[item]) && structKeyExists(prop, "item_type")) {
+						_data[item] = createObject("component", prop.item_type).loadFromStruct(_data[item]);	
 					}
 				}
 				
 				var setter = this['set' & item];
-				setter(data[item]);
+				setter(_data[item]);
 				
 			}
 			

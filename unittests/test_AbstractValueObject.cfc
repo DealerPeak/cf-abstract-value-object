@@ -206,6 +206,13 @@ component extends="mxunit.framework.TestCase" {
 		/* test IceCream VO property */
 		assertEquals(icStruct.flavor, m.flavor);
 		assertEquals(icStruct.baseFlavor, m.baseFlavor);
+		
+		/* test nested VO property */
+		assertEquals(icStruct.scoops[1].size, m.scoops[1].size);
+		assertEquals(false, m.scoops[1].child);
+		
+		assertEquals(icStruct.vendor.name, m.vendor.name);
+		assertEquals("Portland", m.vendor.location);
 	}
 	
 	/*
@@ -453,7 +460,9 @@ component extends="mxunit.framework.TestCase" {
 			/* Ice Cream Props */ 
 			"id": "tmk_134", 
 			"baseFlavor": "chocolate", 
-			"flavor": "Udderly Chocolate"
+			"flavor": "Udderly Chocolate",
+			"scoops": getScoops(),
+			"vendor": getVendorStruct()
 		};
 	}
 	
