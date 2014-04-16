@@ -13,7 +13,7 @@ component {
 	/**
 	* @hint "I get a struct representation of the value object based on the value object's properties"
 	**/
-	public struct function getMemento() {
+	public struct function getMemento(boolean ignoreFormats = false) {
 		
 		/* set up a memento object */
 		var memento = {};
@@ -51,11 +51,19 @@ component {
 				}
 				
 				/* if the property has a format, use it */
-				if (structKeyExists(memento, prop.name) && structKeyExists(prop, 'format')) {
+				if (!arguments.ignoreFormats && structKeyExists(memento, prop.name) && structKeyExists(prop, 'format')) {
 					switch (prop.format) {
+						case 'decimal': {
+							memento[prop.name] = decimalFormat(memento[prop.name]);
+							break;
+						}
 						case 'iso': {
 							memento[prop.name] = TimeZone.ConvertDateTimeToISO(memento[prop.name]);
 							break;
+						}
+						case 'string': {
+							memento[prop.name] = memento[prop.name].toString();
+							break;	
 						}
 					}	
 				}
@@ -187,7 +195,11 @@ component {
 						var allNestedItems = [];
 						var nestedPO = createObject("component", prop.item_type);
 						for (var nestedItem in _data[item]) {
-							arrayAppend(allNestedItems, duplicate(nestedPO.reset().loadFromStruct(nestedItem)));
+							if (isObject(nestedItem)) {
+								arrayAppend(allNestedItems, nestedItem);
+							} else if (isStruct(nestedItem)) {
+								arrayAppend(allNestedItems, duplicate(nestedPO.reset().loadFromStruct(nestedItem)));
+							}
 						}
 						_data[item] = allNestedItems;
 					}
