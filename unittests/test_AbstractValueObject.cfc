@@ -213,6 +213,19 @@ component extends="mxunit.framework.TestCase" {
 		
 		assertEquals(icStruct.vendor.name, m.vendor.name);
 		assertEquals("Portland", m.vendor.location);
+		
+		/* Test load from struct where type in the property is a component path. */
+		var scoop = new resources.Scoop();
+		scoop.loadFromStruct({
+			'id': 1
+			,'size': 'giant'
+			,'flavor': {
+				'id': 555
+				,'flavor': 'Cookies And Cream'
+				,'base_flavor': 'vanilla'
+			}
+		});
+		AssertEquals('Cookies And Cream', scoop.getMemento().flavor.flavor);
 	}
 	
 	/*

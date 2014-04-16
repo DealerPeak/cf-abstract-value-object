@@ -13,7 +13,7 @@ component {
 	/**
 	* @hint "I get a struct representation of the value object based on the value object's properties"
 	**/
-	public struct function getMemento() {
+	public struct function getMemento(boolean ignoreFormats = false) {
 		
 		/* set up a memento object */
 		var memento = {};
@@ -51,11 +51,19 @@ component {
 				}
 				
 				/* if the property has a format, use it */
-				if (structKeyExists(memento, prop.name) && structKeyExists(prop, 'format')) {
+				if (!arguments.ignoreFormats && structKeyExists(memento, prop.name) && structKeyExists(prop, 'format')) {
 					switch (prop.format) {
+						case 'decimal': {
+							memento[prop.name] = decimalFormat(memento[prop.name]);
+							break;
+						}
 						case 'iso': {
 							memento[prop.name] = TimeZone.ConvertDateTimeToISO(memento[prop.name]);
 							break;
+						}
+						case 'string': {
+							memento[prop.name] = memento[prop.name].toString();
+							break;	
 						}
 					}	
 				}
@@ -168,7 +176,7 @@ component {
 				_data[item] = value;
 			}
 			
-			/* if there's a setter, and either the value is simple and has a length OR it's not simple */
+			/* if there's a setter, and either the value is not simple OR is simple and has a length */
 			if (functionExists('set' & item) && (!isSimpleValue(_data[item]) || len(_data[item]))) {
 				
 				/* there may be a setter that does not have a corresponding property */
@@ -177,23 +185,27 @@ component {
 					/* get a handle on the property */
 					var prop = properties[item];
 					
-					/* force a boolean if necessary */
 					if (prop.type == 'boolean') {
+						/* force a boolean if necessary */
 						_data[item] = _data[item] ? true : false;	
-					}
-					
-					/* handle nested items */
-					if (isArray(_data[item]) && structKeyExists(prop, "item_type")) {
+					} else if (isArray(_data[item]) && structKeyExists(prop, "item_type")) {
+						/* handle nested items */
 						var allNestedItems = [];
 						var nestedPO = createObject("component", prop.item_type);
 						for (var nestedItem in _data[item]) {
-							arrayAppend(allNestedItems, duplicate(nestedPO.reset().loadFromStruct(nestedItem)));
+							if (isObject(nestedItem)) {
+								arrayAppend(allNestedItems, nestedItem);
+							} else if (isStruct(nestedItem)) {
+								arrayAppend(allNestedItems, duplicate(nestedPO.reset().loadFromStruct(nestedItem)));
+							}
 						}
 						_data[item] = allNestedItems;
-					}
-					
-					if (isStruct(_data[item]) && structKeyExists(prop, "item_type")) {
+					} else if (isStruct(_data[item]) && structKeyExists(prop, "item_type")) {
 						_data[item] = createObject("component", prop.item_type).loadFromStruct(_data[item]);	
+					} else if (isStruct(_data[item]) && structKeyExists(prop, "type") && !ListFindNoCase("any,array,binary,boolean,date,guid,numeric,query,string,struct,uuid",prop.type)) {
+						try {
+							_data[item] = createObject("component", prop.type).loadFromStruct(_data[item]);
+						} catch ( any e ) {}
 					}
 				}
 				
