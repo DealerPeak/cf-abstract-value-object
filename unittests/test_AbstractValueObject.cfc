@@ -228,7 +228,65 @@ component extends="mxunit.framework.TestCase" {
 		AssertEquals('Cookies And Cream', scoop.getMemento().flavor.flavor);
 	}
 	
-	/*
+	/**
+	* @hint "I test that loading from struct works when some properties are objects."
+	**/
+	public void function loadFromStruct_should_work_with_object_properties() {
+		
+		/* Load from struct. But, the flavor key is an object. */
+		var scoop = new resources.Scoop().loadFromStruct({
+			'id': 1
+			,'size': 'hugantic'
+			,'flavor': new resources.Flavor().loadFromStruct({
+				'id': 11
+				,'flavor': 'Cookies And Cream'
+			})
+		});
+		var mem = scoop.getMemento();
+		AssertEquals('1', mem.id);
+		AssertEquals('hugantic', mem.size);
+		AssertEquals('11', mem.flavor.id);
+		AssertEquals('Cookies And Cream', mem.flavor.flavor);
+		
+		/* Load from struct using an array with a mix of struct and object items. */
+		var icecream = new resources.IceCream().loadFromStruct({
+			'id': 1
+			,'scoops': [
+				/* VO Item */
+				new resources.Scoop().loadFromStruct({
+					'size': 'large'
+					,'flavor': new resources.Flavor().loadFromStruct({
+						'id': 111
+						,'flavor': 'Cookies And Cream'
+					})
+				})
+				/* Struct Item */
+				,{
+					'size': 'pretty big'
+					,'flavor': {
+						'id': 112
+						,'flavor': 'Chocolate And Peanut Butter'
+					}
+				}
+			]
+			,'vendor': {}
+		});
+		AssertEquals(2, ArrayLen(icecream.getScoops()));
+		/* Scoop one object ok? */
+		AssertTrue(IsObject(icecream.getScoops()[1]));
+		AssertEquals('Scoop', ListLast(GetMetaData(icecream.getScoops()[1]).Name,'.')); // Correct type?
+		AssertEquals('large', icecream.getScoops()[1].getSize());
+		AssertTrue(IsObject(icecream.getScoops()[1].getFlavor()));
+		AssertEquals('Cookies And Cream', icecream.getScoops()[1].getFlavor().getFlavor());
+		/* Scoop two object ok? */
+		AssertTrue(IsObject(icecream.getScoops()[2]));
+		AssertEquals('Scoop', ListLast(GetMetaData(icecream.getScoops()[2]).Name,'.')); // Correct type?
+		AssertEquals('pretty big', icecream.getScoops()[2].getSize());
+		AssertTrue(IsObject(icecream.getScoops()[2].getFlavor()));
+		AssertEquals('Chocolate And Peanut Butter', icecream.getScoops()[2].getFlavor().getFlavor());
+	}
+	
+	/**
 	 * @hint Test that propertyExists works
 	 **/
 	public void function propertyExists_should_work() {
