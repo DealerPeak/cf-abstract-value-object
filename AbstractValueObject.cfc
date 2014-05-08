@@ -200,9 +200,9 @@ component {
 							}
 						}
 						_data[item] = allNestedItems;
-					} else if (isStruct(_data[item]) && structKeyExists(prop, "item_type")) {
+					} else if (isStruct(_data[item]) && !isObject(_data[item]) && structKeyExists(prop, "item_type")) {
 						_data[item] = createObject("component", prop.item_type).loadFromStruct(_data[item]);	
-					} else if (isStruct(_data[item]) && structKeyExists(prop, "type") && !ListFindNoCase("any,array,binary,boolean,date,guid,numeric,query,string,struct,uuid",prop.type)) {
+					} else if (isStruct(_data[item]) && !isObject(_data[item]) && structKeyExists(prop, "type") && !ListFindNoCase("any,array,binary,boolean,date,guid,numeric,query,string,struct,uuid",prop.type)) {
 						try {
 							_data[item] = createObject("component", prop.type).loadFromStruct(_data[item]);
 						} catch ( any e ) {}
