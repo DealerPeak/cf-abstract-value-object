@@ -5,9 +5,18 @@ component {
 	/** 
 	* @hint "I initialize the value object"
 	**/
-	public component function init(component TimeZone = createObject('component', 'lib.timezone')) {
-		variables.TimeZone = arguments.TimeZone;
+	public component function init() {
 		return this;
+	}
+	
+	/**
+	* @hint "I get an instance of the timezone utility. BTW, I lazy load it."
+	**/
+	public component function getTimezoneUtil() {
+		if ( !isDefined("variables.TimeZone") ) {
+			variables.TimeZone = createObject('component', 'lib.timezone');
+		}
+		return variables.TimeZone;
 	}
 	
 	/**
@@ -58,7 +67,7 @@ component {
 							break;
 						}
 						case 'iso': {
-							memento[prop.name] = TimeZone.ConvertDateTimeToISO(memento[prop.name]);
+							memento[prop.name] = getTimezoneUtil().ConvertDateTimeToISO(memento[prop.name]);
 							break;
 						}
 						case 'string': {
